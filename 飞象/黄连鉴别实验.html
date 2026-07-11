@@ -336,10 +336,26 @@
                 /* max-w-3xl等宽度限制去掉 */ +
                 '.max-w-3xl{max-width:100%!important;}' +
                 /* ====== 实验一深度修复 ====== */ +
-                '#labPage.active{position:relative!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;}' +
+                '#labPage.active{position:relative!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;padding:6px 0!important;}' +
                 '#startPage{height:100%!important;max-height:100vh!important;overflow:hidden!important;}' +
                 '.lab-layout-wrapper{height:auto!important;overflow-y:auto!important;}' +
-                '.image-container{height:220px!important;min-height:160px!important;overflow:visible!important;}' +
+                '.image-container{height:auto!important;overflow:visible!important;}' +
+                '.image-container img{object-fit:contain!important;width:100%!important;height:auto!important;display:block!important;}' +
+                '.col-span-3 .card{padding:0!important;background:none!important;box-shadow:none!important;border:none!important;}' +
+                '.col-span-3 .card>.mt-2{padding:6px 10px!important;margin-top:4px!important;}' +
+                '.col-span-3 .card>.mt-2 h3{font-size:14px!important;}' +
+                '.col-span-3 .card>.mt-2 p{font-size:13px!important;line-height:1.5!important;}' +
+                '.col-span-1 .card{padding:10px!important;}' +
+                '.col-span-1 .title-text{font-size:15px!important;margin-bottom:6px!important;}' +
+                '.space-y-2{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:4px!important;overflow:visible!important;max-height:none!important;}' +
+                '.space-y-2 .btn{width:100%!important;padding:6px 4px!important;font-size:11px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}' +
+                '.border-t h3{font-size:13px!important;}' +
+                '.border-t ul li{font-size:12px!important;line-height:1.4!important;}' +
+                '.info-cards-area .card h3{font-size:14px!important;}' +
+                '.info-cards-area .card p{font-size:13px!important;line-height:1.5!important;}' +
+                '.lab-layout-wrapper>header{flex-wrap:wrap!important;gap:4px!important;padding:0 8px!important;}' +
+                '.lab-layout-wrapper>header .title-text{font-size:16px!important;}' +
+                '.lab-layout-wrapper>header .btn{font-size:12px!important;padding:6px 12px!important;}' +
                 '.card{overflow:visible!important;}' +
                 /* ====== 实验三深度修复 ====== */ +
                 'body.h-screen,body.flex,body.flex-col{height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +
