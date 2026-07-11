@@ -21,7 +21,7 @@
         .iframe-container iframe.active { display: block; }
         @media (max-width: 768px) {
             .iframe-container { position: relative; top: 44px; height: auto; min-height: calc(100vh - 44px); overflow: visible; }
-            .iframe-container iframe { height: auto; min-height: calc(100vh - 44px); }
+            .iframe-container iframe { height: 3000px; min-height: calc(100vh - 44px); }
         }
         .loading-overlay { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; background: #EBEDD4; display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.5s ease; }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
@@ -338,6 +338,22 @@
                 'section .overflow-hidden{overflow:visible!important;}' +
                 /* max-w-3xl等宽度限制去掉 */ +
                 '.max-w-3xl{max-width:100%!important;}' +
+                /* ====== 实验一深度修复 ====== */ +
+                '#labPage.active{position:relative!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;overflow-x:hidden!important;}' +
+                '#startPage{height:auto!important;min-height:100vh!important;}' +
+                '.lab-layout-wrapper{height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +
+                '.image-container{height:200px!important;min-height:150px!important;overflow:visible!important;}' +
+                '.card{overflow:visible!important;}' +
+                /* ====== 实验三深度修复 ====== */ +
+                'body.h-screen,body.flex,body.flex-col{height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +
+                'aside#side-nav{display:none!important;}' +
+                '.flex-1.flex.overflow-hidden{overflow:visible!important;height:auto!important;min-height:100vh!important;flex-direction:column!important;}' +
+                'main{overflow-y:auto!important;overflow-x:hidden!important;height:auto!important;min-height:60vh!important;flex-direction:column!important;padding:12px!important;gap:8px!important;}' +
+                '.glass-panel{padding:12px!important;overflow-y:auto!important;overflow-x:hidden!important;height:auto!important;}' +
+                'header{height:auto!important;min-height:44px!important;padding:8px 12px!important;flex-wrap:wrap!important;gap:6px!important;}' +
+                /* ====== 实验二考核页修复 ====== */ +
+                '#exam-page{position:absolute!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;padding:20px 10px!important;}' +
+                '.exam-container{max-width:100%!important;}' +
                 '}' +
                 '</style>';
             html = html.replace('</head>', fixCSS + '</head>');
@@ -680,7 +696,7 @@
             iframe.srcdoc = html;
             loaded[i] = true;
 
-            /* 手机端：iframe加载后动态调整高度，让内容全部可见 */
+            /* iframe加载后动态调整高度 */
             iframe.onload = function() {
                 if (window.innerWidth <= 768) {
                     resizeIframe(iframe);
@@ -693,21 +709,36 @@
             try {
                 var doc = iframe.contentDocument || iframe.contentWindow.document;
                 if (doc && doc.body) {
-                    var h = doc.body.scrollHeight || doc.documentElement.scrollHeight;
-                    iframe.style.height = h + 'px';
+                    /* 取body和documentElement中较大的scrollHeight */
+                    var h1 = doc.body.scrollHeight || 0;
+                    var h2 = doc.documentElement.scrollHeight || 0;
+                    var h = Math.max(h1, h2);
+                    if (h > 0) {
+                        iframe.style.height = h + 'px';
+                    }
                 }
-            } catch(e) {}
+            } catch(e) { console.warn('resizeIframe error:', e); }
         }
 
-        /* 手机端：监听iframe内容变化，实时调整高度 */
+        /* 手机端：持续监听iframe内容变化并调整高度 */
+        var mobileResizeTimer = null;
         function setupMobileResize() {
             if (window.innerWidth > 768) return;
-            setInterval(function() {
-                var active = document.querySelector('.iframe-container iframe.active');
-                if (active) resizeIframe(active);
-            }, 500);
+            if (mobileResizeTimer) clearInterval(mobileResizeTimer);
+            mobileResizeTimer = setInterval(function() {
+                var iframes = document.querySelectorAll('.iframe-container iframe');
+                for (var k = 0; k < iframes.length; k++) {
+                    if (iframes[k].classList.contains('active') || iframes[k].srcdoc) {
+                        resizeIframe(iframes[k]);
+                    }
+                }
+            }, 300);
         }
         setupMobileResize();
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) setupMobileResize();
+            else if (mobileResizeTimer) { clearInterval(mobileResizeTimer); mobileResizeTimer = null; }
+        });
 
         function switchExperiment(i) {
             document.querySelectorAll('.nav-tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
