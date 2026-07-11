@@ -19,7 +19,10 @@
         .iframe-container { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: none; }
         .iframe-container iframe.active { display: block; }
-        @media (max-width: 768px) { .iframe-container { position: relative; top: 44px; height: calc(100vh - 44px); } }
+        @media (max-width: 768px) {
+            .iframe-container { position: relative; top: 44px; height: auto; min-height: calc(100vh - 44px); overflow: visible; }
+            .iframe-container iframe { height: auto; min-height: calc(100vh - 44px); }
+        }
         .loading-overlay { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; background: #EBEDD4; display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.5s ease; }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
         .loading-spinner { text-align: center; color: #2D593E; }
@@ -155,8 +158,9 @@
         function applyAndLoad(i, html, videoUrls) {
             const fixCSS = '<style>' +
                 /* 全局居中 */
-                'html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;}' +
-                'body{display:flex!important;justify-content:center!important;align-items:flex-start!important;}' +
+                'html,body{width:100%!important;margin:0!important;padding:0!important;}' +
+                'html{height:100%!important;}' +
+                'body{display:flex!important;justify-content:center!important;align-items:flex-start!important;min-height:100%!important;}' +
                 'body>*{width:100%!important;max-width:100%!important;margin-left:auto!important;margin-right:auto!important;}' +
                 /* 容器：隐藏滚动条但可滚动 */
                 '.container{overflow-y:auto!important;overflow-x:hidden!important;height:100vh!important;gap:6px!important;padding:10px 16px!important;scrollbar-width:none!important;}' +
@@ -325,8 +329,8 @@
                 /* step-desc详情框确保完整显示 */ +
                 '.step-desc{min-height:50px!important;padding:12px!important;font-size:14px!important;line-height:1.6!important;background:#EBEDD4!important;}' +
                 /* ====== 通用手机端全局修复 ====== */ +
-                /* body允许滚动 */ +
-                'body{overflow-y:auto!important;height:auto!important;min-height:100vh!important;}' +
+                /* body允许滚动，不限制高度 */ +
+                'html,body{height:auto!important;min-height:100vh!important;overflow-y:auto!important;overflow-x:hidden!important;}' +
                 /* container不限制高度 */ +
                 '.container{height:auto!important;min-height:100vh!important;max-height:none!important;overflow-y:auto!important;}' +
                 /* 所有overflow:hidden改为auto或visible — 仅对flex容器和page生效 */ +
@@ -672,9 +676,38 @@
                     '<\\/script>';
                 html = html.replace('</body>', fixQuiz + '</body>');
             }
-            document.getElementById('iframe' + i).srcdoc = html;
+            const iframe = document.getElementById('iframe' + i);
+            iframe.srcdoc = html;
             loaded[i] = true;
+
+            /* 手机端：iframe加载后动态调整高度，让内容全部可见 */
+            iframe.onload = function() {
+                if (window.innerWidth <= 768) {
+                    resizeIframe(iframe);
+                }
+            };
         }
+
+        /* 动态调整iframe高度以适应内容 */
+        function resizeIframe(iframe) {
+            try {
+                var doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (doc && doc.body) {
+                    var h = doc.body.scrollHeight || doc.documentElement.scrollHeight;
+                    iframe.style.height = h + 'px';
+                }
+            } catch(e) {}
+        }
+
+        /* 手机端：监听iframe内容变化，实时调整高度 */
+        function setupMobileResize() {
+            if (window.innerWidth > 768) return;
+            setInterval(function() {
+                var active = document.querySelector('.iframe-container iframe.active');
+                if (active) resizeIframe(active);
+            }, 500);
+        }
+        setupMobileResize();
 
         function switchExperiment(i) {
             document.querySelectorAll('.nav-tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
