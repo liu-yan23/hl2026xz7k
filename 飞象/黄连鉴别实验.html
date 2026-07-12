@@ -681,12 +681,128 @@
             iframe.srcdoc = html;
             loaded[i] = true;
 
-            /* 手机端：iframe加载后动态调整高度，让内容全部可见 */
+            /* 手机端：iframe加载后强制修复内部样式，绕过CSS优先级问题 */
             iframe.onload = function() {
                 if (window.innerWidth <= 768) {
+                    fixIframeStyles(iframe);
                     resizeIframe(iframe);
                 }
             };
+        }
+
+        /* 手机端：通过JS直接修改iframe内部DOM样式，绕过CSS优先级和Tailwind CDN问题 */
+        function fixIframeStyles(iframe) {
+            try {
+                var doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!doc || !doc.body) return;
+                /* 用setProperty可以设置!important */
+                function setImp(el, prop, val) {
+                    el.style.setProperty(prop, val, 'important');
+                }
+                setImp(doc.body, 'overflow', 'auto');
+                setImp(doc.body, 'overflow-y', 'auto');
+                setImp(doc.body, 'overflow-x', 'hidden');
+                setImp(doc.body, 'height', 'auto');
+                setImp(doc.body, 'min-height', '100vh');
+                setImp(doc.body, 'max-height', 'none');
+                setImp(doc.documentElement, 'overflow', 'auto');
+                setImp(doc.documentElement, 'height', 'auto');
+                setImp(doc.documentElement, 'min-height', '100vh');
+                /* 修复 #labPage.active */
+                var labPage = doc.getElementById('labPage');
+                if (labPage) {
+                    setImp(labPage, 'position', 'relative');
+                    setImp(labPage, 'top', 'auto');
+                    setImp(labPage, 'left', 'auto');
+                    setImp(labPage, 'right', 'auto');
+                    setImp(labPage, 'bottom', 'auto');
+                    setImp(labPage, 'height', 'auto');
+                    setImp(labPage, 'min-height', '100vh');
+                    setImp(labPage, 'width', '100%');
+                    setImp(labPage, 'overflow', 'auto');
+                    setImp(labPage, 'overflow-y', 'auto');
+                    setImp(labPage, 'overflow-x', 'hidden');
+                    setImp(labPage, 'z-index', 'auto');
+                    setImp(labPage, 'padding', '6px 0');
+                }
+                /* 修复 #startPage.active */
+                var startPage = doc.getElementById('startPage');
+                if (startPage) {
+                    setImp(startPage, 'position', 'relative');
+                    setImp(startPage, 'height', 'auto');
+                    setImp(startPage, 'min-height', '100vh');
+                    setImp(startPage, 'overflow-y', 'auto');
+                }
+                /* 修复所有 .page */
+                doc.querySelectorAll('.page').forEach(function(p) {
+                    setImp(p, 'height', 'auto');
+                    setImp(p, 'min-height', '100vh');
+                    setImp(p, 'overflow-y', 'auto');
+                    setImp(p, 'overflow-x', 'hidden');
+                });
+                /* 修复 container */
+                doc.querySelectorAll('.container').forEach(function(c) {
+                    setImp(c, 'height', 'auto');
+                    setImp(c, 'min-height', '100vh');
+                    setImp(c, 'overflow-y', 'auto');
+                });
+                /* 修复所有 overflow-hidden / flex-1 / min-height-0 / h-screen */
+                doc.querySelectorAll('.overflow-hidden').forEach(function(el) {
+                    setImp(el, 'overflow', 'visible');
+                    setImp(el, 'height', 'auto');
+                });
+                doc.querySelectorAll('.flex-1').forEach(function(el) {
+                    setImp(el, 'flex', 'none');
+                });
+                doc.querySelectorAll('.min-height-0, .min-h-0').forEach(function(el) {
+                    setImp(el, 'min-height', '0');
+                });
+                doc.querySelectorAll('.h-screen').forEach(function(el) {
+                    setImp(el, 'height', 'auto');
+                    setImp(el, 'min-height', '100vh');
+                });
+                /* 修复 exp3 的 flex-1.flex.overflow-hidden */
+                doc.querySelectorAll('.flex-1.flex.overflow-hidden, .flex.overflow-hidden').forEach(function(el) {
+                    setImp(el, 'position', 'relative');
+                    setImp(el, 'overflow', 'visible');
+                    setImp(el, 'height', 'auto');
+                    setImp(el, 'min-height', '100vh');
+                    setImp(el, 'flex-direction', 'column');
+                    setImp(el, 'flex', 'none');
+                });
+                /* 修复 #quiz-view (exp3考核页) */
+                var quizView = doc.getElementById('quiz-view');
+                if (quizView) {
+                    setImp(quizView, 'position', 'relative');
+                    setImp(quizView, 'inset', 'auto');
+                    setImp(quizView, 'height', 'auto');
+                    setImp(quizView, 'min-height', '100vh');
+                    setImp(quizView, 'overflow-y', 'auto');
+                }
+                /* 修复 lab-layout-wrapper */
+                doc.querySelectorAll('.lab-layout-wrapper').forEach(function(el) {
+                    setImp(el, 'height', 'auto');
+                });
+                /* 修复 lab-main-area */
+                doc.querySelectorAll('.lab-main-area').forEach(function(el) {
+                    setImp(el, 'grid-template-columns', '1fr');
+                    setImp(el, 'height', 'auto');
+                });
+                /* 修复 card */
+                doc.querySelectorAll('.card').forEach(function(el) {
+                    setImp(el, 'overflow', 'visible');
+                    setImp(el, 'flex', 'none');
+                });
+                /* 修复 image-container */
+                doc.querySelectorAll('.image-container').forEach(function(el) {
+                    setImp(el, 'height', 'auto');
+                    setImp(el, 'overflow', 'visible');
+                });
+                /* 修复 aside侧边栏(exp3) */
+                doc.querySelectorAll('aside#side-nav').forEach(function(el) {
+                    setImp(el, 'display', 'none');
+                });
+            } catch(e) { console.log('fixIframeStyles error:', e); }
         }
 
         /* 动态调整iframe高度以适应内容 */
@@ -700,12 +816,15 @@
             } catch(e) {}
         }
 
-        /* 手机端：监听iframe内容变化，实时调整高度 */
+        /* 手机端：监听iframe内容变化，实时修复样式并调整高度 */
         function setupMobileResize() {
             if (window.innerWidth > 768) return;
             setInterval(function() {
                 var active = document.querySelector('.iframe-container iframe.active');
-                if (active) resizeIframe(active);
+                if (active) {
+                    fixIframeStyles(active);
+                    resizeIframe(active);
+                }
             }, 500);
         }
         setupMobileResize();
