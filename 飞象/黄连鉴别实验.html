@@ -338,9 +338,10 @@
                 'section .overflow-hidden{overflow:visible!important;}' +
                 /* max-w-3xl等宽度限制去掉 */ +
                 '.max-w-3xl{max-width:100%!important;}' +
+                '/* ====== 高特异性覆盖：修复白框遮挡 ====== */' +'#labPage.active{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;height:auto!important;min-height:100vh!important;width:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding:6px 0!important;z-index:auto!important;background:#EBEDD4!important;}' +'#startPage.active{position:relative!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +'body.h-screen{height:auto!important;min-height:100vh!important;}' +'body.flex{flex-direction:column!important;}' +'.flex-1.flex.overflow-hidden{position:relative!important;overflow:visible!important;height:auto!important;min-height:100vh!important;flex-direction:column!important;flex:none!important;}' +'.quiz-view-style{position:relative!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +'#quiz-view{position:relative!important;inset:auto!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;}' +'section .flex-1{flex:none!important;}' +'section .overflow-hidden{overflow:visible!important;}' +'section .min-h-0{min-height:0!important;}' +'section .h-screen{height:auto!important;min-height:100vh!important;}' +
                 '}' +
                 '</style>';
-            html = html.replace('</head>', fixCSS + '</head>');
+            html = html.replace('</body>', fixCSS + '</body>');
 
             /* 修复anime动画scale溢出：将viewer的scale改为只对内部img生效 */
             html = html.replace(
