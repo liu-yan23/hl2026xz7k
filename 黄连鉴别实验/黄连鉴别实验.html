@@ -20,8 +20,9 @@
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: none; }
         .iframe-container iframe.active { display: block; }
         @media (max-width: 768px) {
-            .iframe-container { position: fixed; top: 44px; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-            .iframe-container iframe { width: 100%; height: 100%; border: none; min-height: 100%; }
+            .iframe-container { position: fixed; top: 44px; left: 0; right: 0; bottom: 0; overflow: hidden; }
+            .iframe-container iframe { width: 100%; height: 100%; border: none; display: none; }
+            .iframe-container iframe.active { display: block; }
         }
         .loading-overlay { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; background: #EBEDD4; display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.5s ease; }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
@@ -642,7 +643,9 @@
             }
             /* 为srcdoc中的相对路径设置<base>，指向主HTML所在目录 */
             const baseHref = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-            html = html.replace('<head>', '<head><base href="' + baseHref + '">');
+            /* 手机端强制CSS：使用html.mobile类选择器（不依赖@media），JS检测后添加class */
+            const mobileFix = '<style id="mobile-force-fix">html.mobile,html.mobile body{height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;display:block!important}html.mobile .container,html.mobile .page,html.mobile #labPage.active,html.mobile #experiment-content,html.mobile #exam-page,html.mobile #exam-result,html.mobile #welcome-page{height:100%!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;display:block!important;position:relative!important}html.mobile .main-stage,html.mobile .step-panel.active,html.mobile .viewer-container,html.mobile #stage-content{height:auto!important;max-height:none!important;overflow:visible!important}</style>';
+            html = html.replace('<head>', '<head><base href="' + baseHref + '">' + mobileFix);
             /* 修复实验一：单选题答错后可重试 */
             if (i === 0) {
                 const fixQuiz = '<script>' +
@@ -672,8 +675,21 @@
             iframe.srcdoc = html;
             loaded[i] = true;
 
-            /* 手机端：iframe使用fixed全屏，加载后不再调整高度 */
+            /* iframe加载后：手机端添加mobile class并精确设置高度 */
             iframe.onload = function() {
+                try {
+                    var doc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (doc && doc.documentElement && window.innerWidth <= 768) {
+                        doc.documentElement.classList.add('mobile');
+                        if (doc.body) {
+                            var h = window.innerHeight - 44;
+                            doc.documentElement.style.height = h + 'px';
+                            doc.body.style.height = h + 'px';
+                            doc.body.style.overflowY = 'auto';
+                            doc.body.style.overflowX = 'hidden';
+                        }
+                    }
+                } catch(e) {}
             };
         }
 
